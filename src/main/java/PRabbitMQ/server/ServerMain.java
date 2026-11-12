@@ -10,18 +10,19 @@ public class ServerMain {
         try (BufferedReader reader = new BufferedReader(new FileReader("data/rr1.txt"))) {
             RRFileReader lector = new RRFileReader(reader);
             RRPublisher publisher = new RRPublisher();
-            publisher.inicializacion();
-            double rr = lector.consumir();
-            System.out.println(" [x] Comezando a transmisión de datos");
-            while(rr !=-1){
-                publisher.envio(rr);
-                rr = lector.consumir();
-                Thread.sleep(1000);
+            try {
+                System.out.println(" [x] Comezando a transmisión de datos");
+                double rr;
+                while ((rr = lector.consumir()) != -1) {
+                    publisher.envio(rr);
+                    Thread.sleep(1000);
+                }
+                System.out.println(" [x] Rematando a transmisión de datos");
+            } finally {
+                publisher.termino();
             }
-            System.out.println(" [x] Rematando a transmisión de datos");
-            publisher.termino();
         } catch (Exception e) {
-            System.err.println("Erro na execución do servidor: " + e.getMessage());
+            System.err.println(" [x] Erro na execución do servidor: " + e.getMessage());
         }
     }
 }
