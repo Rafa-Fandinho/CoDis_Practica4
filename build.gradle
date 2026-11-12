@@ -25,4 +25,9 @@ application {
 tasks.register('runServer', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'PRabbitMQ.server.ServerMain'
+    standardInput = System.in
+}
+
+tasks.named('run', JavaExec) {
+    standardInput = System.in
 }

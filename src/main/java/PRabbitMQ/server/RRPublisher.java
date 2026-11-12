@@ -20,29 +20,17 @@ public class RRPublisher {
         while (!conectado) {
             System.out.println("Introduce a dirección IP ou hostname a ser empregada:");
             String hostName = br.readLine();
-            System.out.println("Introduce o porto a ser empregado:");
-            String port = br.readLine();
-            if (hostName == null || hostName.trim().isEmpty()) {
-                System.out.println(" [x] O host non pode estar baleiro. Téntao de novo.");
-                continue;
+            if (hostName == null) {
+                throw new java.io.IOException("Non hai entrada dispoñible para o hostname.");
             }
-            if(port == null || port.trim().isEmpty()) {
-                System.out.println(" [x] O porto non pode estar baleiro. Téntao de novo.");
-                continue;
-            }
-            int portNum;
-            try {
-                portNum = Integer.parseInt(port.trim());
-                if(portNum<1 || portNum>65535) {
-                    throw new NumberFormatException();
-                }
-            } catch (NumberFormatException e){
-                System.out.println(" [x] Porto non válido.");
+
+            if (hostName.trim().isEmpty()) {
+                System.out.println(" [x] O host non pode estar baleiro. Inténtao de novo");
                 continue;
             }
             try {
                 factory.setHost(hostName.trim());
-                factory.setPort(portNum);
+                factory.setPort(5672);
                 // Intentamos establecer a conexión; se o host é inválido ou non accesible, lanzará unha excepción.
                 connection = factory.newConnection();
                 channel = connection.createChannel();
@@ -54,20 +42,28 @@ public class RRPublisher {
                 System.out.println(" [x] Conectado exitosamente a " + hostName.trim());
 
             } catch (Exception e) {
-                System.out.println(" [!] Non se puido conectar a '" + hostName.trim() + "'. Motivo: " + e.getMessage());
-                System.out.println(" [!] Por favor, comproba o valor e téntao de novo.\n");
-            }
-            // Pechamos calquera conexión parcial antes de reintentar.
-            if (channel != null && channel.isOpen()) {
-                channel.close();
-            }
+                System.out.println(
+                        " [!] Non se puido conectar a '" +
+                                hostName.trim() + "'. Motivo: " + e.getMessage()
+                );
 
-            if (connection != null && connection.isOpen()) {
-                connection.close();
-            }
+                // Pechamos só os recursos creados durante este intento fallido.
+                try {
+                    if (channel != null && channel.isOpen()) {
+                        channel.close();
+                    }
+                    if (connection != null && connection.isOpen()) {
+                        connection.close();
+                    }
+                } catch (Exception closeError) {
+                    System.err.println("Erro durante a limpeza: " + closeError.getMessage());
+                }
 
-            channel = null;
-            connection = null;
+                channel = null;
+                connection = null;
+
+                System.out.println(" [!] Comproba os datos e inténtao de novo.\n");
+            }
         }
     }
 
